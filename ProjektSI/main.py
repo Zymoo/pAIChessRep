@@ -185,6 +185,10 @@ def evaluatePosition(board):
         else:
             return -float("inf")
 
+
+    whiteKingArea = board.attacks(board.king(chess.WHITE))
+    blackKingArea = board.attacks(board.king(chess.BLACK))
+
     for s in chess.SQUARES:
         currentPiece = board.piece_at(s)
         if currentPiece != None and currentPiece.color == chess.WHITE:
@@ -201,15 +205,20 @@ def evaluatePosition(board):
 
         if whiteOccupancy > blackOccupancy:                 #territory
             scoreWhite += 10
+            if s in blackKingArea:                          #kings safety
+                scoreBlack -= 10
         else:
             if blackOccupancy > whiteOccupancy:
                 scoreBlack += 10
+                if s in whiteKingArea:                      #kings safety
+                    scoreWhite -= 10
 
         if s == chess.E4 or s == chess.E5 or s == chess.D4 or s == chess.D5:
             scoreWhite += whiteOccupancy * 5              #it is extremaly important to control the central squares
             scoreBlack += blackOccupancy * 5
         scoreWhite += whiteOccupancy * 5                  #threats and control
         scoreBlack += blackOccupancy * 5
+
 
     scoreWhite += pawnStructure(board,chess.WHITE) * 10                        #bonus for good structure of pawns
     scoreBlack += pawnStructure(board,chess.BLACK) * 10
@@ -254,28 +263,11 @@ def alphabeta(board, depth, alpha, beta, maxPlayer):
         return (score, chosenMove)
 
 
-def tests():
-    print(board.queens)
-    print(board.king(chess.WHITE))
-    print(board.king(chess.BLACK))
-    print(chess.SQUARES)
-    print("\n")
-    move = "a2a4"
-    board.push(chess.Move.from_uci(move))
-    print(board.attacks(0))
-    print(len(board.attacks(0)))
-
-    print("\n")
-    print(board.pieces(chess.PAWN,chess.WHITE))
-    for piece in board.pieces(chess.PAWN,chess.WHITE):
-        print(piece)
-    print("\n")
-    print(board.attackers(chess.WHITE,1))
 
 
 print("\n")
 board = chess.variant.KingOfTheHillBoard('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
-#tests()
+
 #teraz biale zaczynaja - komputer jest bialymi!
 while True:
     move = alphabeta(board, 3, -float("inf"), float("inf"), True)[1]
