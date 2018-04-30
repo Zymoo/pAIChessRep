@@ -2,8 +2,9 @@ import math
 import chess
 import chess.svg
 import chess.variant
+from IPython.display import SVG
 from random import *
-
+#algorytm ewolucyjny/genetyczny do optymalizacji parmaetrow
 pieceScore = { 'P': 100, 'N': 280, 'B': 320, 'R': 479, 'Q': 929, 'K': 6000,'p': 100, 'n': 280, 'b': 320, 'r': 479, 'q': 929, 'k': 6000 }
 
 #biale maja niskie numery indeksow A1=0, B1=2
@@ -124,28 +125,97 @@ piecesPositionEvaluationBlack = {
             17,  30,  7, -14,   6,  -1,  40,  18),
 }           #a   #b   #c  #d   #e   #f   #g   #h
 
+#kolumny - a b c ... h odpowiadaja 0 1 2 ... 7
+def file(square):
+    return square % 8
+
+#wiersze - 1 2 3 ... 8 odpowiadaja 0 1 2 ... 7
+def rank(square):
+    return square / 8
+
+def isSuported(board, square, color):
+    if color == chess.WHITE:
+        if file(square) != 0:     #jesli pionek nie jest na lewym brzegu planszy
+            if board.piece_at(square - 9) != None and board.piece_at(square - 9).piece_type == chess.PAWN:
+                return True
+
+        if file(square) != 7:     #jesli pionek nie jest na prawym brzegu planszy
+            if board.piece_at(square - 7) != None and board.piece_at(square - 7).piece_type == chess.PAWN:
+                return True
+    if color == chess.BLACK:
+        if file(square) != 7:  # jesli pionek nie jest na lewym brzegu planszy
+            if board.piece_at(square + 9) != None and board.piece_at(square + 9).piece_type == chess.PAWN:
+                return True
+
+        if file(square) != 0:  # jesli pionek nie jest na prawym brzegu planszy
+            if board.piece_at(square + 7) != None and board.piece_at(square + 7).piece_type == chess.PAWN:
+                return True
+    return False
+
+def isPhalanx(board, square):
+    if file(square) != 0:     #jesli pionek nie jest na lewym brzegu planszy
+        if board.piece_at(square - 1) != None and board.piece_at(square - 1).piece_type == chess.PAWN:
+            return True
+
+    if file(square) != 7:     #jesli pionek nie jest na prawym brzegu planszy
+        if  board.piece_at(square + 1) != None and board.piece_at(square + 1).piece_type == chess.PAWN:
+            return True
+
+    return False
+
+def pawnStructure(board, color):
+    score = 0
+    for pawn in board.pieces(chess.PAWN, color):
+        if (isPhalanx(board, pawn) or isSuported(board,pawn,color)):
+            score = score + 1
+
+    return score
 
 # w tablicy boarda a1 = 0 - oznacza to ze wysokie indeksy wskazuja na czarne, niskie na biale
 #ewaluacja pozycji dla czarnych!
 def evaluatePosition(board):
     scoreWhite = 0
     scoreBlack = 0
+    whiteOccupancy = 0
+    blackOccupancy = 0
+
+    if board.is_game_over():
+        if (board.result() == "1-0"):
+            return float("inf")
+        else:
+            return -float("inf")
+
     for s in chess.SQUARES:
-        if board.piece_at(s) != None and board.piece_at(s).color == chess.WHITE:
-            scoreWhite += piecesPositionEvaluationWhite[board.piece_at(s).symbol()][s]
-            scoreWhite += pieceScore[board.piece_at(s).symbol()]
+        currentPiece = board.piece_at(s)
+        if currentPiece != None and currentPiece.color == chess.WHITE:
+            scoreWhite += piecesPositionEvaluationWhite[currentPiece.symbol()][s]
+            scoreWhite += pieceScore[currentPiece.symbol()]
             scoreWhite += len(board.attacks(s)) * 5                             #mobility
-        if board.piece_at(s) != None and board.piece_at(s).color == chess.BLACK:
-            scoreBlack += piecesPositionEvaluationBlack[board.piece_at(s).symbol()][s]
-            scoreBlack += pieceScore[board.piece_at(s).symbol()]
+        if currentPiece != None and currentPiece.color == chess.BLACK:
+            scoreBlack += piecesPositionEvaluationBlack[currentPiece.symbol()][s]
+            scoreBlack += pieceScore[currentPiece.symbol()]
             scoreBlack += len(board.attacks(s)) * 5
-        scoreWhite += len(board.attackers(chess.WHITE, s)) * 5                  #threats
-        scoreBlack += len(board.attackers(chess.BLACK, s)) * 5
+
+        whiteOccupancy = len(board.attackers(chess.WHITE, s))
+        blackOccupancy = len(board.attackers(chess.BLACK, s))
+
+        if whiteOccupancy > blackOccupancy:                 #territory
+            scoreWhite += 10
+        else:
+            if blackOccupancy > whiteOccupancy:
+                scoreBlack += 10
+
+        if s == chess.E4 or s == chess.E5 or s == chess.D4 or s == chess.D5:
+            scoreWhite += whiteOccupancy * 5              #it is extremaly important to control the central squares
+            scoreBlack += blackOccupancy * 5
+        scoreWhite += whiteOccupancy * 5                  #threats and control
+        scoreBlack += blackOccupancy * 5
+
+    scoreWhite += pawnStructure(board,chess.WHITE) * 10                        #bonus for good structure of pawns
+    scoreBlack += pawnStructure(board,chess.BLACK) * 10
 
     return scoreWhite - scoreBlack
 
-
-    return board.king(chess.WHITE)
 
 def alphabeta(board, depth, alpha, beta, maxPlayer):
     if depth == 0 or board.is_checkmate():
@@ -184,21 +254,32 @@ def alphabeta(board, depth, alpha, beta, maxPlayer):
         return (score, chosenMove)
 
 
+def tests():
+    print(board.queens)
+    print(board.king(chess.WHITE))
+    print(board.king(chess.BLACK))
+    print(chess.SQUARES)
+    print("\n")
+    move = "a2a4"
+    board.push(chess.Move.from_uci(move))
+    print(board.attacks(0))
+    print(len(board.attacks(0)))
+
+    print("\n")
+    print(board.pieces(chess.PAWN,chess.WHITE))
+    for piece in board.pieces(chess.PAWN,chess.WHITE):
+        print(piece)
+    print("\n")
+    print(board.attackers(chess.WHITE,1))
 
 
 print("\n")
 board = chess.variant.KingOfTheHillBoard('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
-print(board.queens)
-
-print(board.king(chess.WHITE))
-print(board.king(chess.BLACK))
-print(chess.SQUARES)
-
-
+#tests()
 #teraz biale zaczynaja - komputer jest bialymi!
 while True:
-
-    board.push(alphabeta(board, 3, -float("inf"), float("inf"), True)[1])
+    move = alphabeta(board, 3, -float("inf"), float("inf"), True)[1]
+    board.push(move)
     print(board)
     print("\n")
     move = input()
