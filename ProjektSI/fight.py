@@ -32,7 +32,7 @@ def match(whitePlayer, blackPlayer, searchDepth):
 
 def evolution(searchDepth):
 
-    population = initPopulation(50)
+    population = initPopulation(40)
     generations = 100
 
     for generation in range(generations):
@@ -97,7 +97,7 @@ def mutation(population):
     return population
 
 
-finalPopulation = evolution(1)
+finalPopulation = evolution(2)
 for org in finalPopulation:
     print(org.playerParam)
     org.fitness = match(org,Organism([5,10,5,5,8,10]),2) - match(Organism([5,10,5,5,8,10]),org, 2)
