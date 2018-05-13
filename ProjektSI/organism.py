@@ -266,3 +266,6 @@ class Organism:
                 if (beta <= alpha):
                     break
             return (score, chosenMove)
+
+    def __str__(self):
+        return str("Fitness: " + str(self.fitness) +" Params: " + str(self.playerParam))
