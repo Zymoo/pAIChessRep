@@ -15,13 +15,13 @@ class Selection:
     def initPopulation(self, orgNumber):
         return [Organism([random.randint(5, 30), random.randint(5, 30), random.randint(5, 30), random.randint(5, 30), random.randint(0, 10), random.randint(0, 20)]) for _ in range(orgNumber)]
 
-    def figthBlackGameMaster(self, organism, gamesRange, depth):
+    def figthWithWhiteGameMaster(self, organism, gamesRange, depth):
         score = 0
         fileBlack = open('C:/Users/Asus/PycharmProjects/AIv1/venv/Scripts/gamesBlack.txt', "r")
         lines = fileBlack.readlines()
         for _ in range(gamesRange):      #gra dwie partie czarnymi
             gameScore = 0
-            line = lines[random.randint(1, 50)]
+            line = lines[random.randint(0, 49)]
             moves = line.split(" ")
             print(moves);
 
@@ -44,8 +44,9 @@ class Selection:
             score += gameScore
         score = score/gamesRange
         print(score)
+        return score
 
-    def figthWhiteGameMaster(self, organism, gamesRange, depth):
+    def figthWhithBlackGameMaster(self, organism, gamesRange, depth):
         score = 0
         fileBlack = open('C:/Users/Asus/PycharmProjects/AIv1/venv/Scripts/gamesWhite.txt', "r")
         lines = fileBlack.readlines()
@@ -83,9 +84,17 @@ class Selection:
             score += gameScore
         score = score/gamesRange
         print(score)
+        return score
 
-sel = Selection(10,10)
-firstOrganism = Organism([5,10,5,5,8,10])
-#sel.figthBlackGameMaster(firstOrganism, 1, 2)
-sel.figthWhiteGameMaster(firstOrganism,1, 3)
-print()
+    def select(self, numberOfGames, depth):
+        for organism in self.population:
+            scoreWhite = self.figthWhithBlackGameMaster(organism, numberOfGames, depth)
+            scoreBlack = self.figthWithWhiteGameMaster(organism, numberOfGames, depth)
+            organism.fitness = (scoreWhite + scoreBlack)/2
+        return sorted(self.population,key=lambda organism: organism.fitness)
+
+
+sel = Selection(4,4)
+organisms = sel.select(2,1)
+for organism in organisms:
+    print(organism)
