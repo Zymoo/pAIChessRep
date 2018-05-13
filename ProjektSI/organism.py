@@ -232,7 +232,7 @@ class Organism:
         return scoreWhite - scoreBlack
 
     def alphabeta(self, board, depth, alpha, beta, maxPlayer):
-        if depth == 0 or board.is_checkmate():
+        if depth == 0 or board.is_game_over():
             return (self.evaluatePosition(board), None)
         if maxPlayer:
             score = -float("inf")
