@@ -4,7 +4,6 @@ import chess.variant
 import random
 from organism import Organism
 
-
 def match(whitePlayer, blackPlayer, searchDepth):
     #print("\n")
     board = chess.variant.KingOfTheHillBoard('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
@@ -30,10 +29,10 @@ def match(whitePlayer, blackPlayer, searchDepth):
             else:
                 return 0
 
-def evolution(searchDepth):
+def evolution(searchDepth, primaryPopulation, numberOfGenerations):
 
-    population = initPopulation(40)
-    generations = 100
+    population = initPopulation(primaryPopulation)
+    generations = numberOfGenerations
 
     for generation in range(generations):
         print("Generation " +  str(generation) + "\n")
@@ -45,13 +44,23 @@ def evolution(searchDepth):
 
     return population
 
+#[mobilityPar, territoryPar, controlPar, centerControlPar, pawnStructurePar, kingSafetyPar] = [5,10,5,5,8,10]
 def initPopulation(orgNumber):
-    return [Organism([random.randint(0,30), random.randint(0,30), random.randint(0,30), random.randint(0,30), random.randint(0,30), random.randint(0,30)]) for _ in range(orgNumber)]
+    return [Organism([random.randint(10,30), random.randint(5,25), random.randint(10,30), random.randint(10,30), random.randint(0,10), random.randint(0,20)]) for _ in range(orgNumber)]
 
 def selection(population, searchDepth):
     populationSize = len(population) - 1
-    a = population[random.randint(0, populationSize)]
-    b = population[random.randint(0, populationSize)]
+
+    aIndex = random.randint(0, populationSize)
+    bIndex = random.randint(0, populationSize)
+    while True:
+        if aIndex != bIndex:
+            break
+        aIndex = random.randint(0, populationSize)
+        bIndex = random.randint(0, populationSize)
+
+    a = population[aIndex]
+    b = population[bIndex]
 
     if(match(a,b, searchDepth) - match(b, a, searchDepth) > 0):
         population.remove(b)
@@ -61,8 +70,17 @@ def selection(population, searchDepth):
         firstWiner = b
 
     populationSize = len(population) - 1
-    c = population[random.randint(0, populationSize)]
-    d = population[random.randint(0, populationSize)]
+
+    cIndex = random.randint(0, populationSize)
+    dIndex = random.randint(0, populationSize)
+    while True:
+        if cIndex != dIndex:
+            break
+        cIndex = random.randint(0, populationSize)
+        dIndex = random.randint(0, populationSize)
+
+    c = population[cIndex]
+    d = population[dIndex]
 
     if(match(c,d, searchDepth) - match(d,c, searchDepth) > 0):
         population.remove(d)
@@ -96,8 +114,7 @@ def mutation(population):
                  param = random.randint(0,30)
     return population
 
-
-finalPopulation = evolution(2)
+finalPopulation = evolution(3, 40, 30)
 for org in finalPopulation:
     print(org.playerParam)
     org.fitness = match(org,Organism([5,10,5,5,8,10]),2) - match(Organism([5,10,5,5,8,10]),org, 2)
