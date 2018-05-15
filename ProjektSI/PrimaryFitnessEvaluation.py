@@ -12,7 +12,7 @@ class PrimaryFitnessEvaluation:
         self.startNumber = startNumber
         self.population = self.initPopulation(startNumber)
 
-      def initPopulation(self, orgNumber):
+    def initPopulation(self, orgNumber):
         return [Organism([random.uniform(1, 3), random.uniform(1, 3), random.randint(10, 30), random.randint(5, 25),
                           random.randint(10, 30), random.randint(10, 30), random.randint(0, 10), random.randint(0, 20)])
                 for _ in range(orgNumber)]
