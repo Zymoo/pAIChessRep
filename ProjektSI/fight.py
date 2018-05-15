@@ -44,9 +44,8 @@ def evolution(searchDepth, primaryPopulation, numberOfGenerations):
 
     return population
 
-#[mobilityPar, territoryPar, controlPar, centerControlPar, pawnStructurePar, kingSafetyPar] = [5,10,5,5,8,10]
 def initPopulation(orgNumber):
-    return [Organism([random.randint(10,30), random.randint(5,25), random.randint(10,30), random.randint(10,30), random.randint(0,10), random.randint(0,20)]) for _ in range(orgNumber)]
+    return [Organism([random.uniform(1,3), random.uniform(1,3), random.randint(10,30), random.randint(5,25), random.randint(10,30), random.randint(10,30), random.randint(0,10), random.randint(0,20)]) for _ in range(orgNumber)]
 
 def selection(population, searchDepth):
     populationSize = len(population) - 1
@@ -95,7 +94,7 @@ def crossover(parents):
     (firstParent,secondParent) = parents
     firstChild = []
     secondChild = []
-    for i in range(6):
+    for i in range(8):
         if random.random() > 0.5:
             firstChild.append(firstParent.playerParam[i])
         else:
@@ -111,7 +110,7 @@ def mutation(population):
     for organism in population:
         for param in organism.playerParam:
              if random.random() <= 0.05:
-                 param = random.randint(0,30)
+                 param = param + random.uniform(-(1/10)*param,(1/10)*param)
     return population
 
 finalPopulation = evolution(3, 40, 30)
