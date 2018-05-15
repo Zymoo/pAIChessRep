@@ -151,7 +151,7 @@ for organism in finalPopulation:
 
 for org in finalPopulation:
     #print(org.playerParam)
-    org.fitness = match(org,Organism([5,10,5,5,8,10]),3) - match(Organism([5,10,5,5,8,10]),org, 3)
+    org.fitness = match(org,Organism([1,1,5,10,5,5,8,10]),3) - match(Organism([1,1,5,10,5,5,8,10]),org, 3)
     #print(org.fitness)
 
 print('Picklowanie ostatecznych')
