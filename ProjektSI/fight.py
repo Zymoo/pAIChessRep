@@ -2,6 +2,7 @@ import math
 import chess
 import chess.variant
 import random
+import pickle
 from organism import Organism
 
 def match(whitePlayer, blackPlayer, searchDepth):
