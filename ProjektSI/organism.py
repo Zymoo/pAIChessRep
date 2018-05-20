@@ -2,7 +2,6 @@ import math
 import chess
 import chess.variant
 from random import *
-import pickle
 
 
 class Organism:
@@ -184,10 +183,10 @@ class Organism:
 
         if board.is_game_over():
             if (board.result() == "1-0"):
-                return 1000000
+                return 10000000
             else:
                 if (board.result() == "0-1"):
-                    return -1000000
+                    return -10000000
                 else:
                     return 0
 
@@ -201,11 +200,13 @@ class Organism:
                 if currentPiece.color == chess.WHITE:
                     scoreWhite += self.piecesPositionEvaluationWhite[currentPiece.symbol()][s] / positionPar
                     scoreWhite += self.pieceScore[currentPiece.symbol()] * piecePar
-                    scoreWhite += len(board.attacks(s)) * mobilityPar                             #mobility
+                    if currentPiece.piece_type != chess.KING:
+                        scoreWhite += len(board.attacks(s)) * mobilityPar                             #mobility - wszystkie pola ktore atakuje dana figura
                 else:
                     scoreBlack += self.piecesPositionEvaluationBlack[currentPiece.symbol()][s] / positionPar
                     scoreBlack += self.pieceScore[currentPiece.symbol()]* piecePar
-                    scoreBlack += len(board.attacks(s)) * mobilityPar
+                    if currentPiece.piece_type != chess.KING:
+                        scoreBlack += len(board.attacks(s)) * mobilityPar
 
             whiteOccupancy = len(board.attackers(chess.WHITE, s))
             blackOccupancy = len(board.attackers(chess.BLACK, s))
@@ -283,5 +284,3 @@ class Organism:
                 unpickled = pickle.load(input)
                 unpickedList.append(unpickled)
         return unpickedList
-
-
