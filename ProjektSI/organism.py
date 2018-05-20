@@ -180,7 +180,7 @@ class Organism:
         whiteOccupancy = 0
         blackOccupancy = 0
 
-        [positionPar, piecePar, mobilityPar, territoryPar, controlPar, centerControlPar, pawnStructurePar, kingSafetyPar] = self.playerParam
+        [positionPar, piecePar, mobilityPar, territoryPar, pressurePar, centerPressurePar, pawnStructurePar, kingSafetyPar] = self.playerParam
 
         if board.is_game_over():
             if (board.result() == "1-0"):
@@ -202,7 +202,7 @@ class Organism:
                     scoreWhite += self.piecesPositionEvaluationWhite[currentPiece.symbol()][s] / positionPar
                     scoreWhite += self.pieceScore[currentPiece.symbol()] * piecePar
                     if currentPiece.piece_type != chess.KING:
-                        scoreWhite += len(board.attacks(s)) * mobilityPar                             #mobility - wszystkie pola ktore atakuje dana figura
+                        scoreWhite += len(board.attacks(s)) * mobilityPar                             #mobility - all fields that are under one's figure attack
                 else:
                     scoreBlack += self.piecesPositionEvaluationBlack[currentPiece.symbol()][s] / positionPar
                     scoreBlack += self.pieceScore[currentPiece.symbol()]* piecePar
@@ -219,14 +219,14 @@ class Organism:
             else:
                 if blackOccupancy > whiteOccupancy:
                     scoreBlack += territoryPar
-                    if s in whiteKingArea:                      #kings safety
+                    if s in whiteKingArea:
                         scoreWhite -= kingSafetyPar
 
             if s == chess.E4 or s == chess.E5 or s == chess.D4 or s == chess.D5:
-                scoreWhite += whiteOccupancy * centerControlPar              #it is extremaly important to control the central squares
-                scoreBlack += blackOccupancy * centerControlPar
-            scoreWhite += whiteOccupancy * controlPar                  #threats and control
-            scoreBlack += blackOccupancy * controlPar
+                scoreWhite += whiteOccupancy * centerPressurePar              #it is extremaly important to control the central squares
+                scoreBlack += blackOccupancy * centerPressurePar
+            scoreWhite += whiteOccupancy * pressurePar                  #threats and pressure
+            scoreBlack += blackOccupancy * pressurePar
 
 
         scoreWhite += self.pawnStructure(board,chess.WHITE) * pawnStructurePar                        #bonus for good structure of pawns
