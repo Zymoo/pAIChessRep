@@ -64,7 +64,7 @@ class SimpleMatch:
                 if board.is_game_over():
                     break
 
-firstOrganism = Organism([1.7882712821646762, 2.0117582809407675, 20, 8, 14, 12, 7, 10])
+firstOrganism = Organism([1.7882712821646762, 2.0117582809407675, 20, 8, 14, 12, 7, 10])    #two best finalists
 secondOrganism = Organism([1.8121153745983598, 2.557559664770355, 11, 8, 16, 22, 7, 10])
 sm = SimpleMatch()
 score = sm.computersMatch(secondOrganism,firstOrganism, 3)
