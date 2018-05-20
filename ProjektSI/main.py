@@ -117,8 +117,8 @@ class ChessCell(Button):
 class ChessGame(BoxLayout):
     #parametry organizmu
     parameters = [1.8121153745983598, 2.557559664770355, 11, 8, 16, 22, 7, 10]
-    color = 'black'
-    #color = 'white'
+    #color = 'black'
+    color = 'white'
 
 
     if color == 'white':
@@ -167,9 +167,14 @@ class ChessGame(BoxLayout):
             if type(child) == ChessboardCentered:
                 c_board = child.children[0]
 
-        for num in range(64):
-            button = ChessCell(id=str(num))
-            c_board.add_widget(button)
+        if self.color == 'white':
+            for num in range(63, -1, -1):
+                button = ChessCell(id=str(num))
+                c_board.add_widget(button)
+        else:
+            for num in range(64):
+                button = ChessCell(id=str(num))
+                c_board.add_widget(button)
 
     def update_board(self, *args):
         self.ids.board.update_positions(board)
