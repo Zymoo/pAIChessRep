@@ -68,4 +68,3 @@ firstOrganism = Organism([1.7882712821646762, 2.0117582809407675, 20, 8, 14, 12,
 secondOrganism = Organism([1.8121153745983598, 2.557559664770355, 11, 8, 16, 22, 7, 10])
 sm = SimpleMatch()
 score = sm.computersMatch(secondOrganism,firstOrganism, 3)
-#sm.playerComputerMatch(Organism([1.7882712821646762, 2.0117582809407675, 20, 8, 14, 12, 7, 10]),3, False);
