@@ -138,19 +138,19 @@ class Organism:
 
     def isSuported(self, board, square, color):
         if color == chess.WHITE:
-            if self.file(square) != 0:     #jesli pionek nie jest na lewym brzegu planszy
+            if self.file(square) != 0:     #if pawn is not on the left side of board
                 if board.piece_at(square - 9) != None and board.piece_at(square - 9).piece_type == chess.PAWN:
                     return True
 
-            if self.file(square) != 7:     #jesli pionek nie jest na prawym brzegu planszy
+            if self.file(square) != 7:     #if pawn is not on the right side of board
                 if board.piece_at(square - 7) != None and board.piece_at(square - 7).piece_type == chess.PAWN:
                     return True
         if color == chess.BLACK:
-            if self.file(square) != 7:  # jesli pionek nie jest na lewym brzegu planszy
+            if self.file(square) != 7:  # if pawn is not on the left side of board
                 if board.piece_at(square + 9) != None and board.piece_at(square + 9).piece_type == chess.PAWN:
                     return True
 
-            if self.file(square) != 0:  # jesli pionek nie jest na prawym brzegu planszy
+            if self.file(square) != 0:  # if pawn is not on the right side of board
                 if board.piece_at(square + 7) != None and board.piece_at(square + 7).piece_type == chess.PAWN:
                     return True
         return False
