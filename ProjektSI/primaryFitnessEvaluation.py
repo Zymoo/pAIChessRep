@@ -20,7 +20,7 @@ class PrimaryFitnessEvaluation:
         score = 0
         fileBlack = open('gamesBlack.txt', "r")
         lines = fileBlack.readlines()
-        for _ in range(gamesRange):      #gra dwie partie czarnymi
+        for _ in range(gamesRange):  
             gameScore = 0
             line = lines[random.randint(0, 49)]
             moves = line.split(" ")
@@ -43,11 +43,10 @@ class PrimaryFitnessEvaluation:
         score = 0
         fileBlack = open('gamesWhite.txt', "r")
         lines = fileBlack.readlines()
-        for _ in range(gamesRange):      #gra dwie partie czarnymi
+        for _ in range(gamesRange):
             gameScore = 0
             line = lines[random.randint(0, 49)]
             moves = line.split(" ")
-            #print(moves);
 
             whiteMoves = moves[1::3]
             blackMoves = moves[2::3]
@@ -79,4 +78,3 @@ class PrimaryFitnessEvaluation:
 
 selec = PrimaryFitnessEvaluation(startNumber=60)
 organisms = selec.select(numberOfGames=2, depth=3)
-
