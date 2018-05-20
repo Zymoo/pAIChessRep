@@ -2,6 +2,7 @@ import math
 import chess
 import chess.variant
 from random import *
+import pickle
 
 
 class Organism:
