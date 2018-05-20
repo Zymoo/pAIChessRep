@@ -1,281 +1,306 @@
-import math
+#importy dotyczące GUI
+from kivy.app import App
+from kivy.core.window import Window
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.clock import Clock
+from kivy.config import Config
+from kivy.properties import StringProperty
+from functools import partial
+import string
+
 import chess
 import chess.svg
 import chess.variant
-from IPython.display import SVG
+from organism import Organism
 from random import *
-#algorytm ewolucyjny/genetyczny do optymalizacji parmaetrow
-pieceScore = { 'P': 100, 'N': 280, 'B': 320, 'R': 479, 'Q': 929, 'K': 6000,'p': 100, 'n': 280, 'b': 320, 'r': 479, 'q': 929, 'k': 6000 }
 
-#biale maja niskie numery indeksow A1=0, B1=2
-piecesPositionEvaluationWhite = {
-    'P': (  0 ,  0 , 0 ,  0 ,  0 ,  0 , 0 , 0 ,
-            -31 ,8 ,-7 ,-37 ,-36 ,-14 ,3 ,-31 ,
-            -22 ,9 ,5 ,-11 ,-10 ,-2 ,3 ,-19 ,
-            -26 ,3 ,10 ,9 ,6 ,1 ,0 ,-23 ,
-            -17 ,16 ,-2 ,15 ,14 ,0 ,15 ,-13 ,
-            7 ,29 ,21 ,44 ,40 ,31 ,44 ,7 ,
-            78 ,83 ,86 ,73 ,102 ,82 ,85 ,90 ,
-            0, 0, 0, 0, 0, 0, 0, 0,),
 
-    'N': (-74 ,-23 ,-26 ,-24 ,-19 ,-35 ,-22 ,-69 ,
-            -23 ,-15 ,2 ,0 ,2 ,0 ,-23 ,-20 ,
-            -18 ,10 ,13 ,22 ,18 ,15 ,11 ,-14 ,
-            -1 ,5 ,31 ,21 ,22 ,35 ,2 ,0 ,
-            24 ,24 ,45 ,37 ,33 ,41 ,25 ,17 ,
-            10 ,67 ,1 ,74 ,73 ,27 ,62 ,-2 ,
-            -3 ,-6 ,100 ,-36 ,4 ,62 ,-4 ,-14 ,
-            -66 ,-53 ,-75 ,-75 ,-10 ,-55 ,-58 ,-70),
+# ścieżki do plików GUI
+data_dir = 'data/'
+image_dir = data_dir + 'images/'
+cp_images = image_dir + 'chess-pieces/'
+other_images = image_dir + 'other/'
 
-    'B': ( -7 ,2 ,-15 ,-12 ,-14 ,-15 ,-10 ,-10 ,
-            19 ,20 ,11 ,6 ,7 ,6 ,20 ,16 ,
-            14 ,25 ,24 ,15 ,8 ,25 ,20 ,15 ,
-            13 ,10 ,17 ,23 ,17 ,16 ,0 ,7 ,
-            25 ,17 ,20 ,34 ,26 ,25 ,15 ,10 ,
-            -9 ,39 ,-32 ,41 ,52 ,-10 ,28 ,-14 ,
-            -11 ,20 ,35 ,-42 ,-39 ,31 ,2 ,-22 ,
-            -59 ,-78 ,-82 ,-76 ,-23 ,-107 ,-37 ,-50),
+#funkcje związane z GUI
+class Chessboard(GridLayout):
+    def gen_image_dict(self, *args, image_dir=cp_images):
+        if image_dir[-1] != '/':
+            image_dir += '/'
+        d = {'p': image_dir + 'BlackPawn.png',
+             'r': image_dir + 'BlackRook.png',
+             'n': image_dir + 'BlackKnight.png',
+             'b': image_dir + 'BlackBishop.png',
+             'q': image_dir + 'BlackQueen.png',
+             'k': image_dir + 'BlackKing.png',
+             'P': image_dir + 'WhitePawn.png',
+             'R': image_dir + 'WhiteRook.png',
+             'N': image_dir + 'WhiteKnight.png',
+             'B': image_dir + 'WhiteBishop.png',
+             'Q': image_dir + 'WhiteQueen.png',
+             'K': image_dir + 'WhiteKing.png',
+             }
+        return d
 
-    'R': (  -30 ,-24 ,-18 ,10 ,-2 ,-18 ,-31 ,-32 ,
-            -53 ,-38 ,-31 ,-26 ,-29 ,-43 ,-44 ,-53 ,
-            -42 ,-28 ,-42 ,-25 ,-25 ,-35 ,-26 ,-46 ,
-            18 ,-35 ,-16 ,-21 ,-13 ,-29 ,-46 ,10 ,
-            20 ,5 ,16 ,13 ,18 ,-4 ,-9 ,10 ,
-            19 ,35 ,28 ,33 ,45 ,27 ,25 ,15 ,
-            55 ,29 ,56 ,67 ,55 ,62 ,34 ,60 ,
-            35 ,29 ,33 ,4 ,37 ,33 ,56 ,50),
+    def update_positions(self, *args):
+        # Can't call ids directly for some reason so ...
+        # Dictionary mapping ids to children (Chess cells)
+        ids = {child.id: child for child in self.children}
 
-    'Q': (   -39 ,-30 ,-31 ,0 ,-30 ,-36 ,-34 ,-42 ,
-        -36 ,-18 ,0 ,10 ,5 ,-15 ,-21 ,-38 ,
-        -30 ,-6 ,-13 ,12 ,-16 ,10 ,-16 ,-27 ,
-        13 ,-15 ,-2 ,-5 ,-1 ,11 ,-20 ,-22 ,
-        1 ,-16 ,22 ,17 ,25 ,20 ,-13 ,-6 ,
-        -2 ,43 ,32 ,50 ,50 ,63 ,43 ,2 ,
-        15 ,40 ,60 ,-10 ,-20 ,-76 ,-57 ,-24 ,
-        6 ,1 ,-8 ,-80 ,69 ,24 ,88 ,26),
+        # Get the board positions from the fen
+        b = str(board.fen)
+        b = str(board.fen).split()[4].replace('/', '')[20:]
+        # Replace empty spaces with dots
+        for num in range(1, 10):
+            b = b.replace(str(num), '.' * num)
 
-    'K': (   17 ,30 ,7 ,-14 ,6 ,-1 ,40 ,18 ,
-            -4 ,3 ,-14 ,1 ,15 ,-18 ,13 ,4 ,
-            -47 ,-42 ,-43 ,10 ,40 ,-32 ,-29 ,-32 ,
-            -55 ,-43 ,0 ,10000 ,10000 ,2 ,-8 ,-50 ,
-            -55 ,50 ,11 ,10000 ,10000 ,13 ,0 ,-49 ,
-            -62 ,12 ,-57 ,44 ,-67 ,28 ,37 ,-31 ,
-            -32 ,10 ,55 ,56 ,56 ,55 ,10 ,3 ,
-            4 ,54 ,47 ,-99 ,-99 ,60 ,83 ,10),
-}
+        # Generate dictionary that maps pieces to images
+        image_dict = self.gen_image_dict()
 
-piecesPositionEvaluationBlack = {
-    'p': (  0 ,  0 , 0 ,  0 ,  0 ,  0 , 0 , 0 ,
-            78,  83,  86,  73, 102,  82,  85,  90,
-             7,  29,  21,  44,  40,  31,  44,   7,
-           -17,  16,  -2,  15,  14,   0,  15, -13,
-           -26,   3,  10,   9,   6,   1,   0, -23,
-           -22,   9,   5, -11, -10,  -2,   3, -19,
-           -31,   8,  -7, -37, -36, -14,   3, -31,
-            0,    0,   0,   0,   0,   0,   0,  0),
-            # a   #b   #c  #d   #e   #f   #g   #h
+        # Map Chess cell ids to board positions
+        for x in zip(range(64), list(b)):
+            if x[1] != '.':
+                image = image_dict[x[1]]
+            else:
+                image = other_images + 'transparency.png'
+            ids[str(x[0])].children[0].source = image
 
-    'n': ( -66, -53, -75, -75, -10, -55, -58, -70,
-            -3,  -6, 100, -36,   4,  62,  -4, -14,
-            10,  67,   1,  74,  73,  27,  62,  -2,
-            24,  24,  45,  37,  33,  41,  25,  17,
-            -1,   5,  31,  21,  22,  35,   2,   0,
-           -18,  10,  13,  22,  18,  15,  11, -14,
-           -23, -15,   2,   0,   2,   0, -23, -20,
-           -74, -23, -26, -24, -19, -35, -22, -69),
-            # a   #b   #c  #d   #e   #f   #g   #h
+    def highlight_chesscell(self, id_list, *args):
+        self.update_positions()
+        ids = {child.id: child for child in self.children}
+        highlight_image = other_images + 'highlight.png'
+        for id in id_list:
+            ids[str(id)].children[0].source = highlight_image
 
-    'b': ( -59, -78, -82, -76, -23,-107, -37, -50,
-           -11,  20,  35, -42, -39,  31,   2, -22,
-            -9,  39, -32,  41,  52, -10,  28, -14,
-            25,  17,  20,  34,  26,  25,  15,  10,
-            13,  10,  17,  23,  17,  16,   0,   7,
-            14,  25,  24,  15,   8,  25,  20,  15,
-            19,  20,  11,   6,   7,   6,  20,  16,
-            -7,   2, -15, -12, -14, -15, -10, -10),
-            # a   #b   #c  #d   #e   #f   #g   #h
+    def on_size(self, *args):
+        board_dimensions = sorted([self.width, self.height])[0]
 
-    'r': (  35,  29,  33,   4,  37,  33,  56,  50,
-            55,  29,  56,  67,  55,  62,  34,  60,
-            19,  35,  28,  33,  45,  27,  25,  15,
-            20,   5,  16,  13,  18,  -4,  -9,  10,
-            18, -35, -16, -21, -13, -29, -46,  10,
-           -42, -28, -42, -25, -25, -35, -26, -46,
-           -53, -38, -31, -26, -29, -43, -44, -53,
-           -30, -24, -18,  10,  -2, -18, -31, -32),
-             # a   #b   #c  #d   #e   #f   #g   #h
+        self.row_force_default = True
+        self.col_force_default = True
 
-    'q': (   6,   1,  -8,-80,  69,  24,  88,  26,
-            15,  40,  60, -10, -20, -76, -57, -24,
-            -2,  43,  32,  50,  50,  63,  43,   2,
-             1, -16,  22,  17,  25,  20, -13,  -6,
-            13, -15,  -2,  -5,  -1,  11, -20, -22,
-           -30,  -6, -13,  12, -16,  10, -16, -27,
-           -36, -18,   0,  10,  5, -15, -21, -38,
-           -39, -30, -31,  0,  -30, -36, -34, -42),
-            #a   #b   #c  #d   #e   #f   #g   #h
+        self.row_default_height = board_dimensions / self.rows
+        self.col_default_width = board_dimensions / self.columns
 
-    'k': (   4,  54,  47, -99, -99,  60,  83, 10,
-           -32,  10,  55,  56,  56,  55,  10,   3,
-           -62,  12, -57,  44, -67,  28,  37, -31,
-           -55,  50,  11,10000,10000,  13,   0, -49,
-           -55, -43,  0, 10000, 10000, 2,  -8, -50,
-           -47, -42, -43,  10,  40, -32, -29, -32,
-            -4,   3, -14,  1,   15, -18,  13,   4,
-            17,  30,  7, -14,   6,  -1,  40,  18),
-}           #a   #b   #c  #d   #e   #f   #g   #h
+    def button_down(self, id, *args):
+        ids = {child.id: child for child in self.children}
 
-#kolumny - a b c ... h odpowiadaja 0 1 2 ... 7
-def file(square):
-    return square % 8
+        background_down = 'atlas://data/images/defaulttheme/button_pressed'
+        ids[id].background_normal = background_down
 
-#wiersze - 1 2 3 ... 8 odpowiadaja 0 1 2 ... 7
-def rank(square):
-    return square / 8
+    def button_up(self, id, *args):
+        ids = {child.id: child for child in self.children}
 
-def isSuported(board, square, color):
-    if color == chess.WHITE:
-        if file(square) != 0:     #jesli pionek nie jest na lewym brzegu planszy
-            if board.piece_at(square - 9) != None and board.piece_at(square - 9).piece_type == chess.PAWN:
-                return True
+        background_normal = 'atlas://data/images/defaulttheme/button'
+        ids[id].background_normal = background_normal
 
-        if file(square) != 7:     #jesli pionek nie jest na prawym brzegu planszy
-            if board.piece_at(square - 7) != None and board.piece_at(square - 7).piece_type == chess.PAWN:
-                return True
-    if color == chess.BLACK:
-        if file(square) != 7:  # jesli pionek nie jest na lewym brzegu planszy
-            if board.piece_at(square + 9) != None and board.piece_at(square + 9).piece_type == chess.PAWN:
-                return True
+    def press_button(self, id, *args, is_engine_move=False, engine_move=''):
+        id = str(id)
+        self.button_down(id)
 
-        if file(square) != 0:  # jesli pionek nie jest na prawym brzegu planszy
-            if board.piece_at(square + 7) != None and board.piece_at(square + 7).piece_type == chess.PAWN:
-                return True
-    return False
-
-def isPhalanx(board, square):
-    if file(square) != 0:     #jesli pionek nie jest na lewym brzegu planszy
-        if board.piece_at(square - 1) != None and board.piece_at(square - 1).piece_type == chess.PAWN:
-            return True
-
-    if file(square) != 7:     #jesli pionek nie jest na prawym brzegu planszy
-        if  board.piece_at(square + 1) != None and board.piece_at(square + 1).piece_type == chess.PAWN:
-            return True
-
-    return False
-
-def pawnStructure(board, color):
-    score = 0
-    for pawn in board.pieces(chess.PAWN, color):
-        if (isPhalanx(board, pawn) or isSuported(board,pawn,color)):
-            score = score + 1
-
-    return score
-
-# w tablicy boarda a1 = 0 - oznacza to ze wysokie indeksy wskazuja na czarne, niskie na biale
-#ewaluacja pozycji dla czarnych!
-def evaluatePosition(board):
-    scoreWhite = 0
-    scoreBlack = 0
-    whiteOccupancy = 0
-    blackOccupancy = 0
-
-    if board.is_game_over():
-        if (board.result() == "1-0"):
-            return float("inf")
+        if is_engine_move == False:
+            Clock.schedule_once(partial(self.button_up, id), .7)
         else:
-            return -float("inf")
+            Clock.schedule_once(partial(self.button_up, id), .3)
+            board.push(engine_move)
+            Clock.schedule_once(self.update_positions)
+
+class ChessboardCentered(BoxLayout):
+    def on_size(self, *args):
+        board_dimensions = sorted([self.width, self.height])[0]
+        self.padding = [(self.width - board_dimensions) / 2,
+                        (self.height - board_dimensions) / 2, 0, 0]
+
+class ChessCell(Button):
+    pass
+
+class ChessGame(BoxLayout):
+    #parametry organizmu
+    parameters = [1.8121153745983598, 2.557559664770355, 11, 8, 16, 22, 7, 10]
+    color = 'black'
+    #color = 'white'
 
 
-    whiteKingArea = board.attacks(board.king(chess.WHITE))
-    blackKingArea = board.attacks(board.king(chess.BLACK))
-
-    for s in chess.SQUARES:
-        currentPiece = board.piece_at(s)
-        if currentPiece != None and currentPiece.color == chess.WHITE:
-            scoreWhite += piecesPositionEvaluationWhite[currentPiece.symbol()][s]
-            scoreWhite += pieceScore[currentPiece.symbol()]
-            scoreWhite += len(board.attacks(s)) * 5                             #mobility
-        if currentPiece != None and currentPiece.color == chess.BLACK:
-            scoreBlack += piecesPositionEvaluationBlack[currentPiece.symbol()][s]
-            scoreBlack += pieceScore[currentPiece.symbol()]
-            scoreBlack += len(board.attacks(s)) * 5
-
-        whiteOccupancy = len(board.attackers(chess.WHITE, s))
-        blackOccupancy = len(board.attackers(chess.BLACK, s))
-
-        if whiteOccupancy > blackOccupancy:                 #territory
-            scoreWhite += 10
-            if s in blackKingArea:                          #kings safety
-                scoreBlack -= 10
-        else:
-            if blackOccupancy > whiteOccupancy:
-                scoreBlack += 10
-                if s in whiteKingArea:                      #kings safety
-                    scoreWhite -= 10
-
-        if s == chess.E4 or s == chess.E5 or s == chess.D4 or s == chess.D5:
-            scoreWhite += whiteOccupancy * 5              #it is extremaly important to control the central squares
-            scoreBlack += blackOccupancy * 5
-        scoreWhite += whiteOccupancy * 5                  #threats and control
-        scoreBlack += blackOccupancy * 5
-
-
-    scoreWhite += pawnStructure(board,chess.WHITE) * 10                        #bonus for good structure of pawns
-    scoreBlack += pawnStructure(board,chess.BLACK) * 10
-
-    return scoreWhite - scoreBlack
-
-
-def alphabeta(board, depth, alpha, beta, maxPlayer):
-    if depth == 0 or board.is_checkmate():
-        return (evaluatePosition(board), None)
-    if maxPlayer:
-        score = -float("inf")
-        chosenMove = None
-        movesList = board.legal_moves
-        for move in movesList:
-            board.push(move)
-            (curentScore, curentMove) = alphabeta(board, depth - 1, alpha, beta, False )
-            board.pop()
-            if(curentScore > score):
-                score = curentScore
-                chosenMove = move
-            if(score > alpha):
-                alpha = score
-            if(beta <= alpha):
-                break
-        return (score, chosenMove)
+    if color == 'white':
+        maxPlayer = True
     else:
-        score = float("inf")
-        chosenMove = None
-        movesList = board.legal_moves
-        for move in movesList:
+        maxPlayer = False
+
+    organism = Organism(parameters)
+    selected_square = None
+
+    def id_to_square(self, id, *args):
+        id = int(id)
+        row = abs(id // 8 - 8)
+        column = id % 8
+        return (row - 1) * 8 + column
+
+    def id_to_san(self, id, *args):
+        id = int(id)
+        row = abs(id // 8 - 8)
+        column = list(string.ascii_lowercase)[id % 8]
+        return column + str(row)
+
+    def san_to_id(self, san, *args):
+        column = san[0]
+        row = int(san[1])
+        id_row = 64 - (row * 8)
+        id_column = list(string.ascii_lowercase).index(column)
+        id = id_row + id_column
+        return id
+
+    def create_legal_move_dict(self, *args):
+        legal_moves = list(board.legal_moves)
+        legal_move_dict = {}
+        for move in legal_moves:
+            move = str(move)
+            if move[:2] in legal_move_dict:
+                legal_move_dict[move[:2]] = \
+                    legal_move_dict[move[:2]] + [move[2:]]
+            else:
+                legal_move_dict[move[:2]] = [move[2:]]
+
+        return legal_move_dict
+
+    def draw_board(self, *args):
+        for child in self.children:
+            if type(child) == ChessboardCentered:
+                c_board = child.children[0]
+
+        for num in range(64):
+            button = ChessCell(id=str(num))
+            c_board.add_widget(button)
+
+    def update_board(self, *args):
+        self.ids.board.update_positions(board)
+
+
+    def select_piece(self, id, *args):
+        square_num = self.id_to_square(id)
+        square_san = self.id_to_san(id)
+        piece = board.piece_at(square_num)
+
+        legal_move_dict = self.create_legal_move_dict()
+
+        if square_san in legal_move_dict:
+            id_list = []
+            for move in legal_move_dict[square_san]:
+                id_list.append(self.san_to_id(move))
+            self.ids.board.highlight_chesscell(id_list)
+        self.selected_square = id
+
+
+
+    def move_piece(self, id, *args):
+        legal_move_dict = self.create_legal_move_dict()
+        legal_ids = []
+        try:
+            for san in legal_move_dict[ \
+                    self.id_to_san(self.selected_square)]:
+                legal_ids.append(self.san_to_id(san))
+        except KeyError:
+            pass
+
+        if int(id) in legal_ids:
+            original_square = self.id_to_san(self.selected_square)
+            current_square = self.id_to_san(id)
+            move = chess.Move.from_uci(original_square + current_square)
+
             board.push(move)
-            (curentScore, curentMove) = alphabeta(board, depth - 1, alpha, beta, True )
-            board.pop()
-            if(curentScore < score):
-                score = curentScore
-                chosenMove = move
-            if(score < beta):
-                beta = score
-            if(beta <= alpha):
-                break
-        return (score, chosenMove)
+            self.update_board()
+            self.selected_square = None
+
+            if not self.game_end_check():
+                self.engine_move()
+
+        else:
+            self.update_board()
+            self.select_piece(id)
+
+    def engine_move(self, *args, wtime=60 * 100, btime=60 * 100):
+
+        engine_move = (self.organism.alphabeta(board, 3, -float("inf"), float("inf"), self.maxPlayer))[1]
+        str_move = str(engine_move)
+        move = [self.san_to_id(x) for x in [str_move[:2], str_move[2:]]]
 
 
+        self.ids.board.press_button(move[0])
+        self.select_piece(move[0])
+        Clock.schedule_once(partial(self.ids.board.press_button,
+                                    move[1], is_engine_move=True, engine_move=engine_move), 1)
 
+        Clock.schedule_once(self.game_end_check, 1)
+
+
+    def turn(self, *args):
+        return str(board.fen).split()[5]
+
+    def chesscell_clicked(self, id, *args):
+        if self.color == 'black':
+            if self.turn() == 'w':
+                 if id == self.selected_square:
+                    self.update_board()
+                 elif self.selected_square == None:
+                    self.select_piece(id)
+                 else:
+                    self.move_piece(id)
+        else:
+            if self.turn() == 'b':
+                 if id == self.selected_square:
+                    self.update_board()
+                 elif self.selected_square == None:
+                    self.select_piece(id)
+                 else:
+                    self.move_piece(id)
+
+    def end_game(self, reason, *args):
+
+        print(reason)
+        if 'white' in reason:
+            print('Black won')
+        elif 'black' in reason:
+            print('White won')
+        else:
+            if board.result()[-1] == '1':
+                print('Black won')
+            elif board.result()[0] == '1':
+                print('White won')
+            else:
+                print('Draw')
+
+    def game_end_check(self, *args):
+        if board.is_game_over():
+            if board.is_checkmate():
+                self.end_game('checkmate')
+            elif board.is_stalemate():
+                self.end_game('stalemate')
+            elif board.is_insufficient_material():
+                self.end_game('insufficient_material')
+            elif board.is_seventy_five_moves():
+                self.end_game('seventy five moves')
+            elif board.is_fivefold_repetition():
+                self.end_game('fivefold_repetition')
+            elif board.is_variant_end():
+                self.end_game('king is on the hill')
+            return True
+
+        return False
 
 print("\n")
 board = chess.variant.KingOfTheHillBoard('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
 
-#teraz biale zaczynaja - komputer jest bialymi!
-while True:
-    move = alphabeta(board, 3, -float("inf"), float("inf"), True)[1]
-    board.push(move)
-    print(board)
-    print("\n")
-    move = input()
-    print(move)
-    board.push(chess.Move.from_uci(move))
-    print(board)
-    print("\n")
+class ChessboardApp(App):
+    def build(self):
+        game = ChessGame()
+        if game.color == 'white':
+            first_move = (game.organism.alphabeta(board, 3, -float("inf"), float("inf"), game.maxPlayer))[1]
+            board.push(first_move)
+        game.draw_board()
+        game.update_board(board)
+        Window.size = (700, 700)
+        Config.set('graphics', 'resizable', '1')
+        Config.write()
+        return game
+
+if __name__ == '__main__':
+   ChessboardApp().run()
