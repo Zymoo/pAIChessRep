@@ -156,11 +156,11 @@ class Organism:
         return False
 
     def isPhalanx(self, board, square):
-        if self.file(square) != 0:     #jesli pionek nie jest na lewym brzegu planszy
+        if self.file(square) != 0:     #if pawn is not on the left side of board
             if board.piece_at(square - 1) != None and board.piece_at(square - 1).piece_type == chess.PAWN:
                 return True
 
-        if self.file(square) != 7:     #jesli pionek nie jest na prawym brzegu planszy
+        if self.file(square) != 7:     #if pawn is not on the right side of board
             if  board.piece_at(square + 1) != None and board.piece_at(square + 1).piece_type == chess.PAWN:
                 return True
 
