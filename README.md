@@ -1,5 +1,5 @@
 # pAIChess
-School project for AI class. Self-implemented chess engine upgraded with use of evolutional algorithms.
+School project for AI class. Self-implemented chess engine upgraded with use of evolutional algorithms. Focused on the King of the Hill variant.
 
 GUI courtesy of: https://github.com/avncharlie/kivy-chess
 
